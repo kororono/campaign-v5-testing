@@ -126,74 +126,169 @@
     </div>
 
     <script>
-        // --- YOUTUBE-STYLE ROLLING COUNTER ---
-        function createRollingCounter(element, targetValue) {
-            const formattedValue = targetValue.toLocaleString();
-            const digits = formattedValue.split('');
-            
-            // Create container
-            element.innerHTML = '';
-            element.style.display = 'inline-flex';
-            
-            digits.forEach((digit, index) => {
-                if (digit === ',') {
-                    const comma = document.createElement('span');
-                    comma.textContent = ',';
-                    comma.style.display = 'inline-block';
-                    comma.style.width = '0.3em';
-                    element.appendChild(comma);
-                } else {
-                    const digitContainer = document.createElement('div');
-                    digitContainer.className = 'counter-digit';
-                    digitContainer.style.position = 'relative';
-                    digitContainer.style.width = '0.7em';
-                    digitContainer.style.height = '1.2em';
-                    digitContainer.style.overflow = 'hidden';
-                    digitContainer.style.display = 'inline-block';
-                    
-                    const digitInner = document.createElement('div');
-                    digitInner.style.position = 'absolute';
-                    digitInner.style.width = '100%';
-                    digitInner.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                    
-                    // Create stack of numbers 0-9 plus the target
-                    for (let i = 0; i <= 10; i++) {
-                        const span = document.createElement('span');
-                        span.style.display = 'block';
-                        span.style.height = '1.2em';
-                        span.style.lineHeight = '1.2em';
-                        span.textContent = i === 10 ? digit : i;
-                        digitInner.appendChild(span);
+        // --- SLIDING NUMBER COUNTER ---
+        class SlidingCounter {
+            constructor(element, startValue = 0) {
+                this.element = element;
+                this.currentValue = startValue;
+                this.targetValue = startValue;
+                this.digitElements = [];
+                this.initialize();
+            }
+
+            initialize() {
+                this.element.classList.add('sliding-counter');
+                this.element.innerHTML = '';
+                this.createDigits(this.currentValue);
+            }
+
+            createDigits(value) {
+                const formatted = Math.floor(value).toLocaleString();
+                const chars = formatted.split('');
+                
+                this.digitElements = [];
+                
+                chars.forEach((char, index) => {
+                    if (char === ',') {
+                        const comma = document.createElement('span');
+                        comma.className = 'digit-container comma';
+                        comma.textContent = ',';
+                        this.element.appendChild(comma);
+                    } else {
+                        const container = document.createElement('div');
+                        container.className = 'digit-container';
+                        
+                        const roller = document.createElement('div');
+                        roller.className = 'digit-roller';
+                        
+                        // Create 10 digits (0-9) for rolling effect
+                        for (let i = 0; i < 10; i++) {
+                            const digit = document.createElement('div');
+                            digit.className = 'digit';
+                            digit.textContent = i;
+                            roller.appendChild(digit);
+                        }
+                        
+                        container.appendChild(roller);
+                        this.element.appendChild(container);
+                        
+                        // Set initial position
+                        const initialDigit = parseInt(char);
+                        roller.style.transform = `translateY(-${initialDigit * 100}%)`;
+                        roller.style.transition = 'none';
+                        
+                        this.digitElements.push({
+                            container,
+                            roller,
+                            currentDigit: initialDigit
+                        });
                     }
-                    
-                    digitContainer.appendChild(digitInner);
-                    element.appendChild(digitContainer);
-                    
-                    // Animate after a slight delay
+                });
+            }
+
+            animateTo(newValue) {
+                this.targetValue = newValue;
+                const oldFormatted = Math.floor(this.currentValue).toLocaleString();
+                const newFormatted = Math.floor(newValue).toLocaleString();
+                
+                // If lengths differ, recreate the counter
+                if (oldFormatted.length !== newFormatted.length) {
+                    this.currentValue = newValue;
+                    this.element.style.opacity = '0';
                     setTimeout(() => {
-                        const offset = parseInt(digit) * -1.2;
-                        digitInner.style.transform = `translateY(${offset}em)`;
-                    }, index * 50); // Stagger the animation
+                        this.createDigits(newValue);
+                        this.element.style.opacity = '1';
+                    }, 300);
+                    return;
                 }
-            });
+                
+                // Animate each digit
+                const newChars = newFormatted.split('').filter(c => c !== ',');
+                const animationDuration = 2000; // 2 seconds for smooth effect
+                
+                newChars.forEach((char, index) => {
+                    const targetDigit = parseInt(char);
+                    const digitElement = this.digitElements[index];
+                    
+                    if (digitElement && digitElement.currentDigit !== targetDigit) {
+                        const { roller, currentDigit } = digitElement;
+                        
+                        // Calculate the shortest path (considering wrapping)
+                        let delta = targetDigit - currentDigit;
+                        if (delta < 0) delta += 10;
+                        
+                        // Prepare for animation
+                        setTimeout(() => {
+                            // Set transition with custom easing
+                            roller.style.transition = `transform ${animationDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
+                            
+                            // If we need to wrap around
+                            if (currentDigit > targetDigit) {
+                                // First, instantly move to the wrapped position
+                                roller.style.transition = 'none';
+                                const currentY = -currentDigit * 100;
+                                
+                                // Add duplicate digits at the end for smooth wrapping
+                                for (let i = 0; i < targetDigit + 1; i++) {
+                                    const digit = document.createElement('div');
+                                    digit.className = 'digit';
+                                    digit.textContent = i;
+                                    roller.appendChild(digit);
+                                }
+                                
+                                // Animate to the new position
+                                setTimeout(() => {
+                                    roller.style.transition = `transform ${animationDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
+                                    roller.style.transform = `translateY(-${(10 + targetDigit) * 100}%)`;
+                                    
+                                    // Clean up after animation
+                                    setTimeout(() => {
+                                        roller.style.transition = 'none';
+                                        roller.style.transform = `translateY(-${targetDigit * 100}%)`;
+                                        // Remove extra digits
+                                        while (roller.children.length > 10) {
+                                            roller.removeChild(roller.lastChild);
+                                        }
+                                    }, animationDuration);
+                                }, 10);
+                            } else {
+                                // Simple animation for increasing digits
+                                roller.style.transform = `translateY(-${targetDigit * 100}%)`;
+                            }
+                            
+                            digitElement.currentDigit = targetDigit;
+                        }, index * 50); // Stagger the animations
+                    }
+                });
+                
+                this.currentValue = newValue;
+            }
         }
 
+        // Store counter instances
+        const counters = {};
+
         /**
-         * Animates a number with YouTube-style rolling effect
-         * @param {string} id - The ID of the HTML element to update.
-         * @param {number} start - The starting number.
-         * @param {number} end - The ending number.
+         * Initialize or update a sliding counter
+         * @param {string} id - The ID of the HTML element
+         * @param {number} value - The target value
          */
-        function animateCounter(id, start, end) {
+        function updateSlidingCounter(id, value) {
             const element = document.getElementById(id);
             if (!element) return;
             
-            // For large changes, use rolling animation
-            if (Math.abs(end - start) > 0) {
-                createRollingCounter(element, end);
-            } else {
-                element.textContent = end.toLocaleString();
+            if (!counters[id]) {
+                counters[id] = new SlidingCounter(element, 0);
             }
+            
+            counters[id].animateTo(value);
+        }
+
+        /**
+         * Legacy function for compatibility
+         */
+        function animateCounter(id, start, end) {
+            updateSlidingCounter(id, end);
         }
 
         // --- LIVE API & UI LOGIC ---
