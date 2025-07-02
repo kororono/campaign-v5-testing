@@ -13,8 +13,23 @@ body {
 }
 
 /* Custom gradient for the hero section */
+/* This is where you can change the header background gradient */
 .hero-gradient {
-    background: linear-gradient(135deg, var(--brand-black) 0%, #333333 100%);
+    /* Current: Black to dark gray gradient at 135 degree angle */
+    background: linear-gradient(135deg, var(--brand-black) 0%, #18212d 100%);
+    
+    /* Example gradients you can try: */
+    /* Kenya flag inspired - Green to black: */
+    /* background: linear-gradient(135deg, var(--brand-green) 0%, var(--brand-black) 100%); */
+    
+    /* Blue gradient: */
+    /* background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); */
+    
+    /* Sunset gradient: */
+    /* background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%); */
+    
+    /* Multiple color stops: */
+    /* background: linear-gradient(135deg, var(--brand-green) 0%, var(--brand-black) 50%, var(--brand-red) 100%); */
 }
 
 /* A subtle pattern for the background to add texture */
