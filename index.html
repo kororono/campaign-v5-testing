@@ -19,27 +19,26 @@
 
         <!-- Header / Hero Section -->
         <header class="hero-gradient text-white rounded-2xl shadow-2xl overflow-hidden mb-12">
-            <div class="grid md:grid-cols-2 items-center">
-                <div class="p-8 md:p-12">
+            <div class="flex flex-col md:flex-row">
+                <div class="flex-1 p-8 md:p-12">
                     <h1 class="text-4xl md:text-5xl font-black leading-tight mb-4">Transparency in Action</h1>
                     <p class="text-lg text-gray-300 mb-6">A New Standard for Political Accountability.</p>
                     <blockquote class="border-l-4 border-brand-green pl-4 italic text-gray-200">
                         "If you cannot trust your leader with ten shillings, you should not trust them with billions. Every coin, every transaction, every decision – transparent and accountable."
                     </blockquote>
                 </div>
-                <div class="hidden md:block relative h-full min-h-[400px] bg-gray-100">
-                    <!-- Debug: Multiple image attempts -->
-                    <img id="candidateImage" 
-                         src="images/headshot.webp" 
+                <!-- Image Container - Fixed dimensions and visible background -->
+                <div class="w-full md:w-[400px] h-[300px] md:h-[400px] bg-gray-800 relative">
+                    <img src="images/headshot.webp" 
                          alt="Candidate Portrait" 
-                         class="h-full w-full object-cover"
-                         onerror="handleImageError(this)">
-                    
-                    <!-- Fallback placeholder (hidden by default) -->
-                    <div id="imagePlaceholder" class="hidden absolute inset-0 flex items-center justify-center bg-gray-200">
-                        <div class="text-center p-8">
+                         class="absolute inset-0 w-full h-full object-cover"
+                         onerror="this.style.display='none'; document.getElementById('imageFallback').style.display='flex';">
+                    <!-- Fallback with visible background -->
+                    <div id="imageFallback" style="display:none;" class="absolute inset-0 flex items-center justify-center bg-gray-700">
+                        <div class="text-center">
                             <div class="text-6xl mb-4">🇰🇪</div>
-                            <p class="text-gray-600">Campaign Image</p>
+                            <p class="text-white">Campaign Portrait</p>
+                            <p class="text-gray-400 text-sm mt-2">Image: images/headshot.webp</p>
                         </div>
                     </div>
                 </div>
