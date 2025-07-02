@@ -16,7 +16,7 @@ body {
 /* This is where you can change the header background gradient */
 .hero-gradient {
     /* Current: Black to dark gray gradient at 135 degree angle */
-    background: linear-gradient(135deg, var(--brand-black) 0%, #18212d 100%);
+    background: linear-gradient(135deg, var(--brand-black) 0%, #18212d 80%);
     
     /* Example gradients you can try: */
     /* Kenya flag inspired - Green to black: */
