@@ -45,3 +45,48 @@ body {
         transform: rotate(360deg);
     }
 }
+
+/* YouTube-style rolling counter */
+.counter-container {
+    position: relative;
+    height: 1.2em;
+    overflow: hidden;
+    display: inline-flex;
+}
+
+.counter-digit {
+    position: relative;
+    width: 0.6em;
+    height: 1.2em;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.counter-digit-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.counter-digit-inner span {
+    display: block;
+    height: 1.2em;
+    line-height: 1.2em;
+    text-align: center;
+}
+
+/* Animate the rolling effect */
+@keyframes rollDown {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.rolling {
+    animation: rollDown 0.5s ease-out;
+}
