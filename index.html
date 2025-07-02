@@ -126,37 +126,74 @@
     </div>
 
     <script>
-        // --- IMAGE ERROR HANDLING ---
-        function handleImageError(img) {
-            console.error('Image failed to load:', img.src);
+        // --- YOUTUBE-STYLE ROLLING COUNTER ---
+        function createRollingCounter(element, targetValue) {
+            const formattedValue = targetValue.toLocaleString();
+            const digits = formattedValue.split('');
             
-            // Try different paths
-            const paths = [
-                'images/headshot.webp',
-                './images/headshot.webp',
-                '../images/headshot.webp',
-                '/images/headshot.webp',
-                'headshot.webp',
-                // GitHub Pages specific paths (replace 'your-repo-name' with your actual repo name)
-                '/your-repo-name/images/headshot.webp'
-            ];
+            // Create container
+            element.innerHTML = '';
+            element.style.display = 'inline-flex';
             
-            // Try each path
-            const tryNextPath = (index) => {
-                if (index < paths.length) {
-                    console.log('Trying path:', paths[index]);
-                    img.onerror = () => tryNextPath(index + 1);
-                    img.src = paths[index];
+            digits.forEach((digit, index) => {
+                if (digit === ',') {
+                    const comma = document.createElement('span');
+                    comma.textContent = ',';
+                    comma.style.display = 'inline-block';
+                    comma.style.width = '0.3em';
+                    element.appendChild(comma);
                 } else {
-                    // All paths failed, show placeholder
-                    console.error('All image paths failed. Showing placeholder.');
-                    img.style.display = 'none';
-                    document.getElementById('imagePlaceholder').classList.remove('hidden');
+                    const digitContainer = document.createElement('div');
+                    digitContainer.className = 'counter-digit';
+                    digitContainer.style.position = 'relative';
+                    digitContainer.style.width = '0.7em';
+                    digitContainer.style.height = '1.2em';
+                    digitContainer.style.overflow = 'hidden';
+                    digitContainer.style.display = 'inline-block';
+                    
+                    const digitInner = document.createElement('div');
+                    digitInner.style.position = 'absolute';
+                    digitInner.style.width = '100%';
+                    digitInner.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    
+                    // Create stack of numbers 0-9 plus the target
+                    for (let i = 0; i <= 10; i++) {
+                        const span = document.createElement('span');
+                        span.style.display = 'block';
+                        span.style.height = '1.2em';
+                        span.style.lineHeight = '1.2em';
+                        span.textContent = i === 10 ? digit : i;
+                        digitInner.appendChild(span);
+                    }
+                    
+                    digitContainer.appendChild(digitInner);
+                    element.appendChild(digitContainer);
+                    
+                    // Animate after a slight delay
+                    setTimeout(() => {
+                        const offset = parseInt(digit) * -1.2;
+                        digitInner.style.transform = `translateY(${offset}em)`;
+                    }, index * 50); // Stagger the animation
                 }
-            };
+            });
+        }
+
+        /**
+         * Animates a number with YouTube-style rolling effect
+         * @param {string} id - The ID of the HTML element to update.
+         * @param {number} start - The starting number.
+         * @param {number} end - The ending number.
+         */
+        function animateCounter(id, start, end) {
+            const element = document.getElementById(id);
+            if (!element) return;
             
-            // Start trying paths
-            tryNextPath(0);
+            // For large changes, use rolling animation
+            if (Math.abs(end - start) > 0) {
+                createRollingCounter(element, end);
+            } else {
+                element.textContent = end.toLocaleString();
+            }
         }
 
         // --- LIVE API & UI LOGIC ---
