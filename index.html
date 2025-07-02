@@ -27,10 +27,21 @@
                         "If you cannot trust your leader with ten shillings, you should not trust them with billions. Every coin, every transaction, every decision – transparent and accountable."
                     </blockquote>
                 </div>
-                <div class="hidden md:block">
-                    <img src="../images/headshot.webp" 
+                <div class="hidden md:block relative h-full min-h-[400px] bg-gray-100">
+                    <!-- Debug: Multiple image attempts -->
+                    <img id="candidateImage" 
+                         src="images/headshot.webp" 
                          alt="Candidate Portrait" 
-                         class="h-full w-full object-cover">
+                         class="h-full w-full object-cover"
+                         onerror="handleImageError(this)">
+                    
+                    <!-- Fallback placeholder (hidden by default) -->
+                    <div id="imagePlaceholder" class="hidden absolute inset-0 flex items-center justify-center bg-gray-200">
+                        <div class="text-center p-8">
+                            <div class="text-6xl mb-4">🇰🇪</div>
+                            <p class="text-gray-600">Campaign Image</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -116,6 +127,39 @@
     </div>
 
     <script>
+        // --- IMAGE ERROR HANDLING ---
+        function handleImageError(img) {
+            console.error('Image failed to load:', img.src);
+            
+            // Try different paths
+            const paths = [
+                'images/headshot.webp',
+                './images/headshot.webp',
+                '../images/headshot.webp',
+                '/images/headshot.webp',
+                'headshot.webp',
+                // GitHub Pages specific paths (replace 'your-repo-name' with your actual repo name)
+                '/your-repo-name/images/headshot.webp'
+            ];
+            
+            // Try each path
+            const tryNextPath = (index) => {
+                if (index < paths.length) {
+                    console.log('Trying path:', paths[index]);
+                    img.onerror = () => tryNextPath(index + 1);
+                    img.src = paths[index];
+                } else {
+                    // All paths failed, show placeholder
+                    console.error('All image paths failed. Showing placeholder.');
+                    img.style.display = 'none';
+                    document.getElementById('imagePlaceholder').classList.remove('hidden');
+                }
+            };
+            
+            // Start trying paths
+            tryNextPath(0);
+        }
+
         // --- LIVE API & UI LOGIC ---
         
         // The URL for your Google Apps Script Web App
