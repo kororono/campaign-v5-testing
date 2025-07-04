@@ -87,7 +87,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: transform 2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         
         .odometer-ribbon-inner {
@@ -133,7 +133,7 @@
                 <!-- Total Transactions -->
                 <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-brand-green">
                     <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total On-Chain Transactions</h2>
-                    <div class="text-3xl md:text-4xl font-bold text-brand-black my-2" id="txnCount">0</div>
+                    <div class="text-3xl md:text-4xl font-bold text-brand-black my-2" id="txnCount" class="odometer">0</div>
                     <p class="text-gray-400 text-xs">All verified transactions</p>
                 </div>
 
@@ -256,10 +256,11 @@
          * Animates the odometer to a new value
          * @param {string} id - The element ID
          * @param {number} newValue - The new value to animate to
+         * @param {boolean} isInitial - Whether this is the initial load animation
          */
-        function animateOdometer(id, newValue) {
+        function animateOdometer(id, newValue, isInitial = false) {
             const element = document.getElementById(id);
-            if (!element || !element.classList.contains('odometer')) return;
+            if (!element || (!element.classList.contains('odometer') && element.id !== 'txnCount')) return;
             
             const newHTML = createOdometerHTML(newValue);
             const oldDigits = element.querySelectorAll('.odometer-digit:not(.comma)');
@@ -274,21 +275,29 @@
                 const digit = parseInt(digitElement.getAttribute('data-digit'));
                 const ribbon = digitElement.querySelector('.odometer-ribbon');
                 
-                // Start from random position for rolling effect
-                if (oldDigits.length === 0 || index >= oldDigits.length) {
-                    // New digit, roll from bottom
+                if (isInitial) {
+                    // For initial load, always start from bottom (showing 0) and roll up
+                    ribbon.style.transition = 'none';
+                    ribbon.style.transform = `translateY(0em)`; // Start at 0
+                    
+                    setTimeout(() => {
+                        ribbon.style.transition = 'transform 2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        ribbon.style.transform = `translateY(-${digit}em)`;
+                    }, 100 + (index * 100)); // Increased stagger for initial load
+                } else if (oldDigits.length === 0 || index >= oldDigits.length) {
+                    // New digit during update, roll from bottom
                     ribbon.style.transition = 'none';
                     ribbon.style.transform = `translateY(-10em)`;
                     
                     setTimeout(() => {
-                        ribbon.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        ribbon.style.transition = 'transform 2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                         ribbon.style.transform = `translateY(-${digit}em)`;
-                    }, 50 + (index * 50)); // Stagger animation from left to right
+                    }, 50 + (index * 50));
                 } else {
                     // Existing digit, animate to new position
                     setTimeout(() => {
                         ribbon.style.transform = `translateY(-${digit}em)`;
-                    }, index * 50); // Stagger animation from left to right
+                    }, index * 50);
                 }
             });
         }
@@ -361,7 +370,8 @@
 
                 // Animate changes
                 if (totalCount !== previousTotalCount) {
-                    animateCounter("txnCount", previousTotalCount, totalCount);
+                    const isInitial = previousTotalCount === 0;
+                    animateOdometer("txnCount", totalCount, isInitial);
                     previousTotalCount = totalCount;
                 }
                 if (donationsCount !== previousDonationsCount) {
@@ -369,7 +379,8 @@
                     previousDonationsCount = donationsCount;
                 }
                 if (donationsAmount !== previousDonationsAmount) {
-                    animateOdometer("donationsAmount", donationsAmount);
+                    const isInitial = previousDonationsAmount === 0;
+                    animateOdometer("donationsAmount", donationsAmount, isInitial);
                     previousDonationsAmount = donationsAmount;
                 }
                 if (expensesCount !== previousExpensesCount) {
@@ -377,7 +388,8 @@
                     previousExpensesCount = expensesCount;
                 }
                 if (expensesAmount !== previousExpensesAmount) {
-                    animateOdometer("expensesAmount", expensesAmount);
+                    const isInitial = previousExpensesAmount === 0;
+                    animateOdometer("expensesAmount", expensesAmount, isInitial);
                     previousExpensesAmount = expensesAmount;
                 }
 
@@ -587,6 +599,7 @@
             });
 
             // Initialize odometer displays
+            document.getElementById('txnCount').innerHTML = createOdometerHTML(0);
             document.getElementById('donationsAmount').innerHTML = createOdometerHTML(0);
             document.getElementById('expensesAmount').innerHTML = createOdometerHTML(0);
 
