@@ -16,7 +16,6 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f7fafc;
-        }
         /* Responsive font sizing for large numbers */
         @media (max-width: 768px) {
             /* 6 figures (100,000+) */
@@ -42,7 +41,17 @@
             border-color: #48bb78;
             box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.3);
         }
-        
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #48bb78;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         /* Toast Notification for Copy to Clipboard */
         #toast-notification {
             position: fixed;
