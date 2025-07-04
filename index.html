@@ -453,9 +453,7 @@
                 return;
             }
 
-            // --- JS CHANGE HERE ---
-            // The next line now creates the spinner without Tailwind classes.
-            resultEl.innerHTML = `<div class="loading-spinner"></div>`;
+            resultEl.innerHTML = `<div class="loading-spinner h-12 w-12 mx-auto"></div>`;
 
             try {
                 const res = await fetch(API_URL + '?method=GET', {
@@ -489,13 +487,14 @@
                         const isOnChain = matchedTransaction.onChain?.toString().toLowerCase() === 'true';
                         // Use blockchainTxHash first, with a fallback to txHash for compatibility
                         const txHash = matchedTransaction.blockchainTxHash || matchedTransaction.txHash;
+                        const transactionType = (matchedTransaction.direction === "IN" || matchedTransaction.direction === "in") ? "Donation" : "Expense";
                         
                         if (isOnChain && txHash && txHash !== 'undefined' && txHash !== '') {
                             // Transaction is on-chain with valid hash
                             resultEl.innerHTML = `
                                 <div class="bg-green-100 text-green-800 p-4 rounded-lg transition-all duration-300 text-left">
                                     <p class="font-bold text-lg">✅ Verified On-Chain!</p>
-                                    <p class="text-sm mt-2">Your transaction is confirmed on the blockchain.</p>
+                                    <p class="text-sm mt-2">Your ${transactionType.toLowerCase()} transaction is confirmed on the blockchain.</p>
                                     <div class="mt-4 p-4 bg-white rounded-lg border border-green-200">
                                         <p class="font-semibold text-sm mb-2">Blockchain Transaction Hash:</p>
                                         <div class="flex items-center gap-2 mb-3">
@@ -520,7 +519,7 @@
                                             </a>
                                         </div>
                                     </div>
-                                    <p class="text-xs text-gray-600 mt-4">You can see all the transactions <a href="${PUBLIC_LEDGER_URL}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">here</a>.</p>
+                                    <p class="text-xs text-gray-600 mt-4">Transaction Type: <span class="font-semibold">${transactionType}</span> | You can see all the transactions <a href="${PUBLIC_LEDGER_URL}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">here</a>.</p>
                                 </div>
                             `;
                         } else if (isOnChain) {
@@ -528,8 +527,8 @@
                             resultEl.innerHTML = `
                                 <div class="bg-yellow-100 text-yellow-800 p-4 rounded-lg transition-all duration-300">
                                     <p class="font-bold text-lg">⚠️ On-Chain, Hash Processing</p>
-                                    <p class="text-sm mt-1">Your transaction is confirmed on-chain but the blockchain hash is still being processed. Please check back in a few minutes.</p>
-                                    <p class="text-xs text-gray-600 mt-4">You can see all the transactions <a href="${PUBLIC_LEDGER_URL}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">here</a>.</p>
+                                    <p class="text-sm mt-1">Your ${transactionType.toLowerCase()} transaction is confirmed on-chain but the blockchain hash is still being processed. Please check back in a few minutes.</p>
+                                    <p class="text-xs text-gray-600 mt-4">Transaction Type: <span class="font-semibold">${transactionType}</span> | You can see all the transactions <a href="${PUBLIC_LEDGER_URL}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">here</a>.</p>
                                 </div>
                             `;
                         } else {
@@ -537,8 +536,8 @@
                             resultEl.innerHTML = `
                                 <div class="bg-yellow-100 text-yellow-800 p-4 rounded-lg transition-all duration-300">
                                     <p class="font-bold text-lg">⚠️ Transaction Found, Pending Blockchain</p>
-                                    <p class="text-sm mt-1">Your transaction has been recorded but is still pending blockchain confirmation.</p>
-                                    <p class="text-xs text-gray-600 mt-4">You can see all the transactions <a href="${PUBLIC_LEDGER_URL}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">here</a>.</p>
+                                    <p class="text-sm mt-1">Your ${transactionType.toLowerCase()} transaction has been recorded but is still pending blockchain confirmation.</p>
+                                    <p class="text-xs text-gray-600 mt-4">Transaction Type: <span class="font-semibold">${transactionType}</span> | You can see all the transactions <a href="${PUBLIC_LEDGER_URL}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">here</a>.</p>
                                 </div>
                             `;
                         }
@@ -563,7 +562,6 @@
                 `;
             }
         }
-
         /**
          * Copies text to the clipboard and shows a toast notification.
          * @param {string} text - The text to copy.
