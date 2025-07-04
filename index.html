@@ -16,6 +16,16 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f7fafc;
+        /* Responsive font sizing for large numbers */
+        @media (max-width: 768px) {
+            /* 6 figures (100,000+) */
+            .odometer.large-number {
+                font-size: 1.5rem !important; /* Down from 1.875rem (text-3xl) */
+            }
+            /* 7 figures (1,000,000+) */
+            .odometer.very-large-number {
+                font-size: 1.25rem !important;
+            }
         }
         .hero-gradient {
             background: linear-gradient(135deg, #1a2a45, #1e3a5f);
@@ -261,6 +271,14 @@
         function animateOdometer(id, newValue, isInitial = false) {
             const element = document.getElementById(id);
             if (!element || (!element.classList.contains('odometer') && element.id !== 'txnCount')) return;
+            
+            // Add responsive classes based on number size
+            element.classList.remove('large-number', 'very-large-number');
+            if (newValue >= 1000000) {
+                element.classList.add('very-large-number');
+            } else if (newValue >= 100000) {
+                element.classList.add('large-number');
+            }
             
             const newHTML = createOdometerHTML(newValue);
             const oldDigits = element.querySelectorAll('.odometer-digit:not(.comma)');
