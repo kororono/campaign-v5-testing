@@ -440,7 +440,13 @@
             resultEl.innerHTML = `<div class="loading-spinner h-12 w-12 mx-auto"></div>`;
 
             try {
-                const res = await fetch(API_URL + '?method=GET');
+                const res = await fetch(API_URL + '?method=GET', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    mode: 'cors'
+                });
                 if (!res.ok) throw new Error('Network response was not ok.');
                 const data = await res.json();
 
