@@ -61,6 +61,46 @@
             background-color: #2d3748; /* Dark gray */
             color: #ffffff;
         }
+
+        /* Odometer Style Counter */
+        .odometer {
+            display: inline-flex;
+            font-variant-numeric: tabular-nums;
+            line-height: 1em;
+        }
+        
+        .odometer-digit {
+            position: relative;
+            display: inline-block;
+            width: 0.6em;
+            height: 1em;
+            overflow: hidden;
+            margin: 0 0.02em;
+        }
+        
+        .odometer-digit.comma {
+            width: 0.3em;
+        }
+        
+        .odometer-ribbon {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .odometer-ribbon-inner {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .odometer-value {
+            display: block;
+            height: 1em;
+            line-height: 1em;
+            text-align: center;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -101,7 +141,7 @@
                 <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-green-500">
                     <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Donations Received</h2>
                     <div class="text-3xl md:text-4xl font-bold text-green-600 my-2">
-                        KSh <span id="donationsAmount">0</span>
+                        KSh <span id="donationsAmount" class="odometer">0</span>
                     </div>
                     <p class="text-gray-400 text-xs">Money IN • <span id="donationsCount">0</span> transactions</p>
                 </div>
@@ -110,7 +150,7 @@
                 <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-brand-red">
                     <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Campaign Expenses</h2>
                     <div class="text-3xl md:text-4xl font-bold text-red-600 my-2">
-                        KSh <span id="expensesAmount">0</span>
+                        KSh <span id="expensesAmount" class="odometer">0</span>
                     </div>
                     <p class="text-gray-400 text-xs">Money OUT • <span id="expensesCount">0</span> transactions</p>
                 </div>
@@ -168,6 +208,9 @@
         
         // The URL for your Google Apps Script Web App
         const API_URL = "https://script.google.com/macros/s/AKfycbymKKpg1hihXyX5a8dmpg8xnHPVhetuBnM2v0Ul1jXK4eeDRkga6t-p_6N2hM_5IstDBA/exec";
+        
+        // Public Ledger URL
+        const PUBLIC_LEDGER_URL = "https://docs.google.com/spreadsheets/d/14_8XqIiW8odyiGAE3Yq-iVs8Z90thRykLISaEhenwZw/edit?usp=sharing";
 
         // Store previous values to animate only when data changes
         let previousTotalCount = 0;
@@ -177,7 +220,81 @@
         let previousExpensesAmount = 0;
 
         /**
-         * Animates a number from a start to an end value.
+         * Creates an odometer-style counter element
+         * @param {number} value - The number to display
+         * @returns {string} HTML string for the odometer
+         */
+        function createOdometerHTML(value) {
+            const valueStr = Math.floor(value).toLocaleString();
+            let html = '';
+            
+            for (let i = 0; i < valueStr.length; i++) {
+                const char = valueStr[i];
+                if (char === ',') {
+                    html += '<span class="odometer-digit comma">,</span>';
+                } else {
+                    const digit = parseInt(char);
+                    html += `<span class="odometer-digit" data-digit="${digit}">
+                        <span class="odometer-ribbon" style="transform: translateY(-${digit}em)">
+                            <span class="odometer-ribbon-inner">`;
+                    
+                    // Add all digits 0-9 for smooth rolling
+                    for (let d = 0; d <= 9; d++) {
+                        html += `<span class="odometer-value">${d}</span>`;
+                    }
+                    
+                    html += `</span>
+                        </span>
+                    </span>`;
+                }
+            }
+            
+            return html;
+        }
+
+        /**
+         * Animates the odometer to a new value
+         * @param {string} id - The element ID
+         * @param {number} newValue - The new value to animate to
+         */
+        function animateOdometer(id, newValue) {
+            const element = document.getElementById(id);
+            if (!element || !element.classList.contains('odometer')) return;
+            
+            const newHTML = createOdometerHTML(newValue);
+            const oldDigits = element.querySelectorAll('.odometer-digit:not(.comma)');
+            
+            // Set new HTML
+            element.innerHTML = newHTML;
+            
+            // Animate each digit
+            const newDigits = element.querySelectorAll('.odometer-digit:not(.comma)');
+            
+            newDigits.forEach((digitElement, index) => {
+                const digit = parseInt(digitElement.getAttribute('data-digit'));
+                const ribbon = digitElement.querySelector('.odometer-ribbon');
+                
+                // Start from random position for rolling effect
+                if (oldDigits.length === 0 || index >= oldDigits.length) {
+                    // New digit, roll from bottom
+                    ribbon.style.transition = 'none';
+                    ribbon.style.transform = `translateY(-10em)`;
+                    
+                    setTimeout(() => {
+                        ribbon.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        ribbon.style.transform = `translateY(-${digit}em)`;
+                    }, 50 + (index * 50)); // Stagger animation from left to right
+                } else {
+                    // Existing digit, animate to new position
+                    setTimeout(() => {
+                        ribbon.style.transform = `translateY(-${digit}em)`;
+                    }, index * 50); // Stagger animation from left to right
+                }
+            });
+        }
+
+        /**
+         * Animates a simple counter (for transaction counts)
          * @param {string} id - The ID of the HTML element to update.
          * @param {number} start - The starting number.
          * @param {number} end - The ending number.
@@ -187,12 +304,9 @@
             const el = document.getElementById(id);
             if (!el) return;
 
-            // If the element is not just a span but a container (like for sliding counters), find the span.
-            const targetEl = el.querySelector('span') || el;
-
             const range = end - start;
             if (range === 0) {
-                targetEl.textContent = end.toLocaleString();
+                el.textContent = end.toLocaleString();
                 return;
             }
             
@@ -206,7 +320,7 @@
                     current = end;
                     clearInterval(timer);
                 }
-                targetEl.textContent = Math.floor(current).toLocaleString();
+                el.textContent = Math.floor(current).toLocaleString();
             }, stepTime);
         }
 
@@ -255,7 +369,7 @@
                     previousDonationsCount = donationsCount;
                 }
                 if (donationsAmount !== previousDonationsAmount) {
-                    animateCounter("donationsAmount", previousDonationsAmount, donationsAmount);
+                    animateOdometer("donationsAmount", donationsAmount);
                     previousDonationsAmount = donationsAmount;
                 }
                 if (expensesCount !== previousExpensesCount) {
@@ -263,16 +377,16 @@
                     previousExpensesCount = expensesCount;
                 }
                 if (expensesAmount !== previousExpensesAmount) {
-                    animateCounter("expensesAmount", previousExpensesAmount, expensesAmount);
+                    animateOdometer("expensesAmount", expensesAmount);
                     previousExpensesAmount = expensesAmount;
                 }
 
             } catch (err) {
                 console.error("Failed to fetch donation data:", err);
                 document.getElementById('txnCount').textContent = 'Error';
-                document.getElementById('donationsAmount').textContent = 'Error';
+                document.getElementById('donationsAmount').innerHTML = 'Error';
                 document.getElementById('donationsCount').textContent = 'Error';
-                document.getElementById('expensesAmount').textContent = 'Error';
+                document.getElementById('expensesAmount').innerHTML = 'Error';
                 document.getElementById('expensesCount').textContent = 'Error';
             }
         }
@@ -317,7 +431,6 @@
                 });
                 
                 setTimeout(() => {
-                    // --- NEW VERIFICATION LOGIC ---
                     if (matchedTransaction) {
                         const isOnChain = matchedTransaction.onChain?.toString().toLowerCase() === 'true';
                         // Use blockchainTxHash first, with a fallback to txHash for compatibility
@@ -353,6 +466,7 @@
                                             </a>
                                         </div>
                                     </div>
+                                    <p class="text-xs text-gray-600 mt-4">You can see all the transactions <a href="${PUBLIC_LEDGER_URL}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">here</a>.</p>
                                 </div>
                             `;
                         } else if (isOnChain) {
@@ -361,6 +475,7 @@
                                 <div class="bg-yellow-100 text-yellow-800 p-4 rounded-lg transition-all duration-300">
                                     <p class="font-bold text-lg">⚠️ On-Chain, Hash Processing</p>
                                     <p class="text-sm mt-1">Your transaction is confirmed on-chain but the blockchain hash is still being processed. Please check back in a few minutes.</p>
+                                    <p class="text-xs text-gray-600 mt-4">You can see all the transactions <a href="${PUBLIC_LEDGER_URL}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">here</a>.</p>
                                 </div>
                             `;
                         } else {
@@ -369,6 +484,7 @@
                                 <div class="bg-yellow-100 text-yellow-800 p-4 rounded-lg transition-all duration-300">
                                     <p class="font-bold text-lg">⚠️ Transaction Found, Pending Blockchain</p>
                                     <p class="text-sm mt-1">Your transaction has been recorded but is still pending blockchain confirmation.</p>
+                                    <p class="text-xs text-gray-600 mt-4">You can see all the transactions <a href="${PUBLIC_LEDGER_URL}" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium">here</a>.</p>
                                 </div>
                             `;
                         }
@@ -381,7 +497,6 @@
                             </div>
                         `;
                     }
-                    // --- END OF NEW LOGIC ---
                 }, 500);
 
             } catch (err) {
@@ -470,6 +585,10 @@
                     toastEl.classList.remove('show');
                 }, 3000); // Hide after 3 seconds
             });
+
+            // Initialize odometer displays
+            document.getElementById('donationsAmount').innerHTML = createOdometerHTML(0);
+            document.getElementById('expensesAmount').innerHTML = createOdometerHTML(0);
 
             // Initial fetch to populate data on page load
             fetchAndUpdateStats();
