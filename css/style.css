@@ -48,10 +48,12 @@ body {
     box-shadow: 0 0 0 2px rgba(0, 106, 78, 0.3);
 }
 
-/* Loading spinner animation */
 .loading-spinner {
     border: 4px solid rgba(0, 0, 0, 0.1);
-    border-top-color: var(--brand-green);
+    border-top-color: var(--brand-green); /* or use border-left-color if you prefer */
+    border-radius: 50%;
+    width: 3rem; /* example size */
+    height: 3rem;
     animation: spin 1s linear infinite;
 }
 
