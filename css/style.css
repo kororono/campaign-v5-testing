@@ -49,10 +49,10 @@ body {
 }
 
 .loading-spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-top-color: var(--brand-green); /* or use border-left-color if you prefer */
+    border: 4px solid #ddd;
+    border-top-color: #22c55e; /* bright green */
     border-radius: 50%;
-    width: 3rem; /* example size */
+    width: 3rem;
     height: 3rem;
     animation: spin 1s linear infinite;
 }
